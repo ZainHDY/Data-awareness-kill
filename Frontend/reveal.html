@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Research Study</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .reveal-section {
+      width: 100%;
+      max-width: var(--max-w);
+      margin-bottom: 20px;
+    }
+    .reveal-section h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+    .data-row:last-child { border-bottom: none; }
+    .data-row .label { color: var(--ink-soft); }
+    .data-row .value { color: var(--ink); font-weight: 500; text-align: end; }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-inline-start: 8px;
+    }
+    .badge-told { background: var(--accent-soft); color: var(--accent); }
+    .badge-quiet { background: var(--decline-soft); color: var(--decline); }
+    .mismatch-note {
+      background: var(--decline-soft);
+      border: 1px solid var(--decline);
+      color: var(--decline);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    .ad-card {
+      border: 1px dashed var(--accent);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: var(--accent-soft);
+    }
+    .ad-card .ad-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .ad-card .ad-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .ad-card .ad-sub {
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+    .topic-rank {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      font-size: 14px;
+    }
+    .topic-rank .bar {
+      height: 8px;
+      border-radius: 4px;
+      background: var(--accent);
+    }
+    .topic-rank .bar-track {
+      flex: 1;
+      background: var(--line);
+      border-radius: 4px;
+      height: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="brand" data-i18n="site_name">Academic Research Study</div>
+
+    <div class="notice" id="intro-notice">
+      Here's exactly what this study collected during the last few minutes — including some things you weren't told about upfront. That's explained on the next page.
+    </div>
+
+    <div class="reveal-section card">
+      <h2>What you told us <span class="badge badge-told">Disclosed</span></h2>
+      <div id="told-us-rows"></div>
+    </div>
+
+    <div class="reveal-section card">
+      <h2>What we collected quietly <span class="badge badge-quiet">Not disclosed upfront</span></h2>
+      <div id="quiet-rows"></div>
+      <div id="cookie-mismatch"></div>
+    </div>
+
+    <div class="reveal-section card">
+      <h2>What you engaged with most</h2>
+      <div id="topic-ranking"></div>
+    </div>
+
+    <div class="reveal-section card">
+      <h2>A demo: what advertisers could have shown you</h2>
+      <p style="margin-bottom:12px;">This is a simplified example of how the data above could be used to target you — no real ad network was involved.</p>
+      <div class="ad-card" id="ad-demo"></div>
+    </div>
+
+    <div class="reveal-section card">
+      <h2>Why this matters</h2>
+      <p id="narrative-email"></p>
+      <p id="narrative-no-email"></p>
+    </div>
+
+    <div class="btn-row" style="max-width: var(--max-w); width: 100%;">
+      <button class="btn-primary" id="continue-btn">Continue to the survey</button>
+    </div>
+  </div>
+
+  <script src="js/translations.js"></script>
+  <script src="js/api.js"></script>
+  <script src="data/posts.js"></script>
+  <script>
+    // Map postId -> topic using the same POSTS array feed.html rendered from,
+    // since post_dwell_final only stores {postId: ms}.
+    const POST_TOPIC = {};
+    POSTS.forEach((p, i) => (POST_TOPIC[`p${i + 1}`] = p.topic));
+
+    function getCollected() {
+      return JSON.parse(sessionStorage.getItem("local_collected_data") || "[]");
+    }
+
+    function latestOfType(entries, type) {
+      const matches = entries.filter((e) => e.type === type);
+      return matches.length ? matches[matches.length - 1].payload : null;
+    }
+
+    function allOfType(entries, type) {
+      return entries.filter((e) => e.type === type).map((e) => e.payload);
+    }
+
+    function row(label, value) {
+      const div = document.createElement("div");
+      div.className = "data-row";
+      div.innerHTML = `<span class="label">${label}</span><span class="value">${value}</span>`;
+      return div;
+    }
+
+    function renderToldUs(profile, volunteered) {
+      const wrap = document.getElementById("told-us-rows");
+      if (profile) {
+        wrap.appendChild(row("Interests", profile.interests.join(", ") || "—"));
+        wrap.appendChild(row("Location", profile.location || "—"));
+        wrap.appendChild(row("Age range", profile.age || "—"));
+        wrap.appendChild(row("Gender", profile.gender || "Not provided"));
+      }
+      wrap.appendChild(row("Name", (volunteered && volunteered.name) || "Not provided"));
+      wrap.appendChild(row("Email", (volunteered && volunteered.email) || "Not provided"));
+    }
+
+    function renderQuiet(entries) {
+      const wrap = document.getElementById("quiet-rows");
+      const fp = latestOfType(entries, "fingerprint");
+      const returnVisit = latestOfType(entries, "return_visit");
+      const scroll = latestOfType(entries, "scroll_depth");
+      const blurs = allOfType(entries, "field_blur");
+      const abandoned = blurs.filter((b) => b.abandoned).length;
+
+      if (fp) {
+        wrap.appendChild(row("Browser / OS", fp.userAgent.slice(0, 60) + (fp.userAgent.length > 60 ? "…" : "")));
+        wrap.appendChild(row("Screen", `${fp.screen.width}×${fp.screen.height}, ${fp.screen.colorDepth}-bit`));
+        wrap.appendChild(row("Timezone", fp.timezone));
+        if (fp.webgl) wrap.appendChild(row("Graphics hardware", fp.webgl.renderer || "Unknown"));
+        wrap.appendChild(row("Referrer", fp.referrer || "Direct / none"));
+      }
+      wrap.appendChild(row("Returning visitor?", returnVisit ? (returnVisit.localStorageFlag || returnVisit.indexedDBFlag ? "Yes" : "No") : "Unknown"));
+      wrap.appendChild(row("Max scroll depth", scroll ? `${scroll.maxPercent}%` : "0%"));
+      wrap.appendChild(row("Comment box interactions", `${blurs.length} field(s) focused, ${abandoned} abandoned mid-type`));
+
+      const cookieChoice = localStorage.getItem("cookie_choice");
+      const analyticsCookieSet = document.cookie.includes("analytics_id=");
+      wrap.appendChild(row("Your cookie choice", cookieChoice || "Not set"));
+      wrap.appendChild(row("Analytics cookie actually set?", analyticsCookieSet ? "Yes" : "No"));
+
+      if (cookieChoice === "reject" && analyticsCookieSet) {
+        document.getElementById("cookie-mismatch").innerHTML =
+          `<div class="mismatch-note">You clicked "Reject all" — but a tracking cookie was set anyway. This mismatch is one of the specific mechanisms this study is measuring awareness of.</div>`;
+      }
+    }
+
+    function renderTopicRanking(entries) {
+      const wrap = document.getElementById("topic-ranking");
+      const dwellFinal = latestOfType(entries, "post_dwell_final") || {};
+      const byTopic = {};
+      Object.entries(dwellFinal).forEach(([postId, ms]) => {
+        const topic = POST_TOPIC[postId];
+        if (!topic) return;
+        byTopic[topic] = (byTopic[topic] || 0) + ms;
+      });
+      const ranked = Object.entries(byTopic).sort((a, b) => b[1] - a[1]);
+      if (ranked.length === 0) {
+        wrap.innerHTML = `<p>No engagement data captured this session.</p>`;
+        return;
+      }
+      const max = ranked[0][1];
+      ranked.forEach(([topic, ms]) => {
+        const pct = Math.max(6, Math.round((ms / max) * 100));
+        const div = document.createElement("div");
+        div.className = "topic-rank";
+        div.innerHTML = `
+          <span style="width:70px; text-transform:capitalize;">${topic}</span>
+          <span class="bar-track"><span class="bar" style="width:${pct}%; display:block;"></span></span>
+          <span style="width:60px; text-align:end; color:var(--ink-soft); font-size:12px;">${(ms / 1000).toFixed(1)}s</span>
+        `;
+        wrap.appendChild(div);
+      });
+      return ranked[0][0];
+    }
+
+    const AD_LOOKUP = {
+      fashion: { title: "Shop the look — 20% off new arrivals", sub: "Clothing & accessories retailer" },
+      food: { title: "Get $10 off your next delivery order", sub: "Food delivery app" },
+      memes: { title: "Download the app everyone's posting from", sub: "Social/content app" },
+      politics: { title: "Support independent journalism — subscribe", sub: "News outlet" },
+      news: { title: "Breaking news alerts, tailored to you", sub: "News app" },
+      sports: { title: "Get match highlights before anyone else", sub: "Sports streaming service" },
+      tech: { title: "Trade in your old device today", sub: "Electronics retailer" },
+      gaming: { title: "New DLC just dropped — 15% off this week", sub: "Game storefront" },
+    };
+
+    function renderAdDemo(topTopic, fp) {
+      const el = document.getElementById("ad-demo");
+      const isMobile = fp && /Mobi|Android|iPhone/.test(fp.userAgent);
+      const ad = AD_LOOKUP[topTopic] || { title: "Ads tailored to your interests", sub: "Generic retailer" };
+      el.innerHTML = `
+        <div class="ad-label">Sponsored — ${isMobile ? "mobile" : "desktop"} placement</div>
+        <div class="ad-title">${ad.title}</div>
+        <div class="ad-sub">${ad.sub} · targeted because of your ${topTopic || "browsing"} engagement</div>
+      `;
+    }
+
+    function renderNarrative(volunteered) {
+      const emailEl = document.getElementById("narrative-email");
+      const noEmailEl = document.getElementById("narrative-no-email");
+      if (volunteered && volunteered.email) {
+        emailEl.textContent =
+          "Because you gave us an email address, everything above could, in principle, be permanently tied to your real identity rather than just an anonymous session — turning a browsing profile into a personal one.";
+        noEmailEl.style.display = "none";
+      } else {
+        emailEl.style.display = "none";
+        noEmailEl.textContent =
+          "You didn't give us an email or name — but the device fingerprint and cookie above can still re-identify this browser across visits, meaning anonymity from not giving contact info is weaker than it feels.";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (localStorage.getItem("consent_participation") !== "yes") {
+        window.location.href = "index.html";
+        return;
+      }
+      applyI18n();
+      const entries = getCollected();
+      const profile = JSON.parse(localStorage.getItem("participant_profile") || "null");
+      const volunteered = JSON.parse(localStorage.getItem("volunteered_info") || "null");
+      const fp = latestOfType(entries, "fingerprint");
+
+      renderToldUs(profile, volunteered);
+      renderQuiet(entries);
+      const topTopic = renderTopicRanking(entries);
+      renderAdDemo(topTopic, fp);
+      renderNarrative(volunteered);
+
+      document.getElementById("continue-btn").addEventListener("click", () => {
+        window.location.href = "survey.html";
+      });
+    });
+  </script>
+</body>
+</html>

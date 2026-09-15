@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Research Study</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/feed.css">
+</head>
+<body class="feed-body">
+  <div class="feed-header">
+    <div class="feed-logo">Loopfeed</div>
+    <div class="feed-timer" id="feed-timer">Please browse for 20s</div>
+  </div>
+
+  <div class="feed-wrap" id="feed-wrap"></div>
+
+  <div class="feed-footer-bar">
+    <button class="btn-primary" id="continue-btn" disabled data-i18n="feed_continue">Continue</button>
+  </div>
+
+  <script src="js/translations.js"></script>
+  <script src="js/api.js"></script>
+  <script src="data/posts.js"></script>
+  <script src="js/collectors.js"></script>
+  <script>
+    // POSTS comes from data/posts.js — edit that file to change feed content,
+    // nothing here needs to change.
+
+    function initials(name) {
+      return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+    }
+
+    function renderFeed() {
+      const wrap = document.getElementById("feed-wrap");
+      POSTS.forEach((post, i) => {
+        const author = post.author;
+        const postId = `p${i + 1}`;
+        const el = document.createElement("article");
+        el.className = "post";
+        el.dataset.postId = postId;
+        el.dataset.topic = post.topic;
+        const mediaHtml = post.image
+          ? `<img class="post-media" src="${post.image}" alt="">`
+          : `<div class="post-media">[ image ]</div>`;
+        el.innerHTML = `
+          <div class="post-head">
+            <div class="post-avatar">${initials(author)}</div>
+            <div>
+              <div class="post-author">${author}</div>
+              <div class="post-meta">${Math.floor(Math.random() * 11) + 1}h ago</div>
+            </div>
+            <div class="post-topic-tag">${post.topic}</div>
+          </div>
+          <div class="post-body">${post.text}</div>
+          ${mediaHtml}
+          <div class="post-actions">
+            <span class="post-action">♡ Like</span>
+            <span class="post-action">💬 Comment</span>
+            <span class="post-action">↗ Share</span>
+          </div>
+          <div class="post-comment-box">
+            <input type="text" placeholder="Write a comment…" data-i18n-placeholder="feed_comment_placeholder">
+          </div>
+        `;
+        wrap.appendChild(el);
+      });
+    }
+
+    function initTimer() {
+      const DURATION = 20;
+      let remaining = DURATION;
+      const timerEl = document.getElementById("feed-timer");
+      const continueBtn = document.getElementById("continue-btn");
+
+      function tick() {
+        const dict = STRINGS[getLang()] || STRINGS.en;
+        if (remaining > 0) {
+          timerEl.textContent = dict.feed_timer_active.replace("{n}", remaining);
+          remaining -= 1;
+        } else {
+          timerEl.textContent = dict.feed_timer_done;
+          timerEl.classList.add("done");
+          continueBtn.disabled = false;
+          clearInterval(interval);
+        }
+      }
+      tick();
+      const interval = setInterval(tick, 1000);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (localStorage.getItem("consent_participation") !== "yes") {
+        window.location.href = "index.html";
+        return;
+      }
+      applyI18n();
+      renderFeed();
+      applyI18n(); // second pass to fill in the placeholders just rendered
+      initTimer();
+      window.initFeedCollectors();
+
+      document.getElementById("continue-btn").addEventListener("click", () => {
+        window.location.href = "reveal.html";
+      });
+    });
+  </script>
+</body>
+</html>

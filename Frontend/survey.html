@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Research Study</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .survey-section {
+      width: 100%;
+      max-width: var(--max-w);
+      margin-bottom: 20px;
+    }
+    .survey-section .section-intro {
+      font-size: 13px;
+      color: var(--ink-soft);
+      margin-bottom: 18px;
+    }
+    .q-block {
+      margin-bottom: 22px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+    }
+    .q-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .q-stem {
+      font-size: 14px;
+      color: var(--ink);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .binary-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .binary-row label {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      cursor: pointer;
+      background: var(--paper);
+    }
+    .binary-row input { margin-inline-end: 6px; }
+    .sub-stem {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin-bottom: 6px;
+    }
+    .who5-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .who5-row label {
+      flex: 1 1 30%;
+      min-width: 85px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      text-align: center;
+      color: var(--ink-soft);
+      padding: 8px 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      cursor: pointer;
+      background: var(--paper);
+    }
+    .dim-tag {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--accent);
+      margin-bottom: 4px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="brand" data-i18n="site_name">Academic Research Study</div>
+
+    <form id="survey-form">
+      <div class="survey-section card">
+        <h2>1. What did you know, and when?</h2>
+        <p class="section-intro">For each statement, say whether it's true, then rate how aware you were of it <em>before today's session</em>.</p>
+        <div id="calibration-items"></div>
+      </div>
+
+      <div class="survey-section card">
+        <h2>2. Your privacy concern</h2>
+        <p class="section-intro">Thinking about the site you just used, how much do you agree with each statement? (1 = Strongly disagree, 7 = Strongly agree)</p>
+        <div id="iuipc-items"></div>
+      </div>
+
+      <div class="survey-section card">
+        <h2>3. Your views on privacy generally</h2>
+        <p class="section-intro">1 = Strongly disagree, 4 = Strongly agree.</p>
+        <div id="westin-items"></div>
+      </div>
+
+      <div class="survey-section card">
+        <h2>4. Over the last two weeks</h2>
+        <p class="section-intro">For each statement, choose the option closest to how often you've felt that way — this is a standard wellbeing index and isn't about today's session specifically.</p>
+        <div id="who5-items"></div>
+      </div>
+
+      <p class="error-text" id="survey-error" data-i18n="required_note">Please answer all questions to continue.</p>
+
+      <div class="btn-row" style="max-width: var(--max-w); width: 100%;">
+        <button type="submit" class="btn-primary" data-i18n="continue_btn">Continue</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="js/translations.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    // ------------------------------------------------------------------
+    // NOTE: all item wording below is English-only for now. These are
+    // adapted validated instruments (IUIPC-8, Westin segmentation, WHO-5)
+    // — translating them for the AR version needs a proper back-translation
+    // pass to keep the constructs valid, not just a string swap, so that's
+    // left as a follow-up rather than auto-translated here.
+    // ------------------------------------------------------------------
+
+    // ---- Section 1: Calibration gap (objective + self-rated pairs) ----
+    const cookieChoice = localStorage.getItem("cookie_choice");
+    const analyticsCookieSet = document.cookie.includes("analytics_id=");
+    let cal4Correct = null; // null = ungraded (no recorded choice, e.g. returning visit)
+    if (cookieChoice === "accept") cal4Correct = "yes";
+    else if (cookieChoice === "reject") cal4Correct = analyticsCookieSet ? "no" : "yes";
+
+    const CALIBRATION_ITEMS = [
+      {
+        id: "cal1", kind: "truefalse", correct: "true",
+        stem: "A website can determine what graphics card you're using just by visiting it, without asking permission.",
+      },
+      {
+        id: "cal2", kind: "truefalse", correct: "false",
+        stem: "Clicking \"Reject All\" on a cookie banner always stops tracking cookies from being set.",
+      },
+      {
+        id: "cal3", kind: "truefalse", correct: "true",
+        stem: "Websites can track how long you look at each individual post, not just whether you visited the page.",
+      },
+      {
+        id: "cal4", kind: "yesno", correct: cal4Correct,
+        stem: "Was your own cookie choice on this site fully honored?",
+      },
+      {
+        id: "cal5", kind: "yesno", correct: "no",
+        stem: "Before you started browsing the feed, were you told it would track how long you looked at each individual post?",
+      },
+    ];
+
+    function renderCalibration() {
+      const wrap = document.getElementById("calibration-items");
+      CALIBRATION_ITEMS.forEach((item, i) => {
+        const [optA, optB] = item.kind === "truefalse" ? ["true", "false"] : ["yes", "no"];
+        const [labelA, labelB] = item.kind === "truefalse" ? ["True", "False"] : ["Yes", "No"];
+        const div = document.createElement("div");
+        div.className = "q-block";
+        div.innerHTML = `
+          <div class="q-stem">${i + 1}. ${item.stem}</div>
+          <div class="binary-row">
+            <label><input type="radio" name="${item.id}" value="${optA}" required>${labelA}</label>
+            <label><input type="radio" name="${item.id}" value="${optB}" required>${labelB}</label>
+          </div>
+          <div class="sub-stem">Before today, how aware were you of this? (1 = Not at all, 7 = Extremely)</div>
+          <div class="scale-row">
+            <span class="scale-label">Not at all</span>
+            <div class="scale-options">
+              ${[1,2,3,4,5,6,7].map(n => `<label><input type="radio" name="${item.id}_aware" value="${n}" required>${n}</label>`).join("")}
+            </div>
+            <span class="scale-label">Extremely</span>
+          </div>
+        `;
+        wrap.appendChild(div);
+      });
+    }
+
+    // ---- Section 2: IUIPC-8, adapted to reference this site ----
+    const IUIPC_ITEMS = [
+      { id: "coll1", dim: "coll", text: "It bothered me when this site asked me for personal information." },
+      { id: "coll2", dim: "coll", text: "When this site asked me for personal information, I thought twice before providing it." },
+      { id: "coll3", dim: "coll", text: "It bothered me to think about how much personal information sites like this one collect without asking." },
+      { id: "coll4", dim: "coll", text: "I'm concerned this site collected more about me than I realized." },
+      { id: "ctrl1", dim: "ctrl", text: "I should have control over how a site like this collects, uses, and shares my information." },
+      { id: "ctrl2", dim: "ctrl", text: "Having control over my personal information is central to how I think about privacy online." },
+      { id: "awa1", dim: "awa", text: "This site should have clearly disclosed how it collects, processes, and uses visitor data." },
+      { id: "awa2", dim: "awa", text: "A trustworthy site's privacy policy should make its data practices clear and easy to find." },
+    ];
+
+    function renderLikertBlock(containerId, items, min, max, minLabel, maxLabel) {
+      const wrap = document.getElementById(containerId);
+      items.forEach((item, i) => {
+        const div = document.createElement("div");
+        div.className = "q-block";
+        const opts = [];
+        for (let n = min; n <= max; n++) opts.push(n);
+        div.innerHTML = `
+          <div class="q-stem">${item.dim ? `<span class="dim-tag">${item.dim}</span>` : ""}${i + 1}. ${item.text}</div>
+          <div class="scale-row">
+            <span class="scale-label">${minLabel}</span>
+            <div class="scale-options">
+              ${opts.map(n => `<label><input type="radio" name="${item.id}" value="${n}" required>${n}</label>`).join("")}
+            </div>
+            <span class="scale-label">${maxLabel}</span>
+          </div>
+        `;
+        wrap.appendChild(div);
+      });
+    }
+
+    // ---- Section 3: Westin segmentation, site-adapted ----
+    const WESTIN_ITEMS = [
+      { id: "westin1", text: "I feel like I lost control over how my personal information was collected and used on this site.", reverse: false },
+      { id: "westin2", text: "This site handled the personal information it collected about me in a proper and transparent way.", reverse: true },
+      { id: "westin3", text: "The consent process on this site gave me a reasonable level of protection for my privacy.", reverse: true },
+    ];
+
+    // ---- Section 4: WHO-5, standard wording ----
+    const WHO5_ITEMS = [
+      { id: "who1", text: "I have felt cheerful and in good spirits." },
+      { id: "who2", text: "I have felt calm and relaxed." },
+      { id: "who3", text: "I have felt active and vigorous." },
+      { id: "who4", text: "I woke up feeling fresh and rested." },
+      { id: "who5", text: "My daily life has been filled with things that interest me." },
+    ];
+    const WHO5_OPTIONS = [
+      { value: 0, label: "At no time" },
+      { value: 1, label: "Some of the time" },
+      { value: 2, label: "Less than half" },
+      { value: 3, label: "More than half" },
+      { value: 4, label: "Most of the time" },
+      { value: 5, label: "All of the time" },
+    ];
+
+    function renderWho5() {
+      const wrap = document.getElementById("who5-items");
+      WHO5_ITEMS.forEach((item, i) => {
+        const div = document.createElement("div");
+        div.className = "q-block";
+        div.innerHTML = `
+          <div class="q-stem">${i + 1}. ${item.text}</div>
+          <div class="who5-row">
+            ${WHO5_OPTIONS.map(opt => `
+              <label>
+                <input type="radio" name="${item.id}" value="${opt.value}" required>
+                ${opt.label}
+              </label>
+            `).join("")}
+          </div>
+        `;
+        wrap.appendChild(div);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (localStorage.getItem("consent_participation") !== "yes") {
+        window.location.href = "index.html";
+        return;
+      }
+      applyI18n();
+      renderCalibration();
+      renderLikertBlock("iuipc-items", IUIPC_ITEMS, 1, 7, "Strongly disagree", "Strongly agree");
+      renderLikertBlock("westin-items", WESTIN_ITEMS, 1, 4, "Strongly disagree", "Strongly agree");
+      renderWho5();
+
+      document.getElementById("survey-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const errorEl = document.getElementById("survey-error");
+
+        // Native `required` on radios catches missing answers on submit
+        // for most browsers, but we double-check before building the
+        // payload since grouped radios can slip through in some cases.
+        const allNames = new Set();
+        form.querySelectorAll("input[type=radio]").forEach((el) => allNames.add(el.name));
+        const missing = [...allNames].filter((name) => !form.querySelector(`input[name="${name}"]:checked`));
+        if (missing.length > 0) {
+          errorEl.classList.add("visible");
+          return;
+        }
+        errorEl.classList.remove("visible");
+
+        function val(name) {
+          const el = form.querySelector(`input[name="${name}"]:checked`);
+          return el ? el.value : null;
+        }
+
+        // Section 1: calibration gap, raw pairs
+        const calibration = CALIBRATION_ITEMS.map((item) => {
+          const response = val(item.id);
+          return {
+            id: item.id,
+            response,
+            correct: item.correct,
+            graded: item.correct !== null,
+            isCorrect: item.correct !== null ? response === item.correct : null,
+            selfRatedAwareness: Number(val(`${item.id}_aware`)),
+          };
+        });
+
+        // Section 2: IUIPC-8 raw + subscale means
+        const iuipc = {};
+        IUIPC_ITEMS.forEach((item) => (iuipc[item.id] = Number(val(item.id))));
+        const dims = ["coll", "ctrl", "awa"];
+        const iuipcSubscales = {};
+        dims.forEach((dim) => {
+          const vals = IUIPC_ITEMS.filter((i) => i.dim === dim).map((i) => iuipc[i.id]);
+          iuipcSubscales[dim] = vals.reduce((a, b) => a + b, 0) / vals.length;
+        });
+
+        // Section 3: Westin, raw + classification
+        const westinRaw = {};
+        WESTIN_ITEMS.forEach((item) => (westinRaw[item.id] = Number(val(item.id))));
+        const privacyOrientedCount = WESTIN_ITEMS.filter((item) => {
+          const v = westinRaw[item.id];
+          return item.reverse ? v <= 2 : v >= 3;
+        }).length;
+        let westinCategory = "pragmatist";
+        if (privacyOrientedCount === 3) westinCategory = "fundamentalist";
+        if (privacyOrientedCount === 0) westinCategory = "unconcerned";
+
+        // Section 4: WHO-5, raw + standard percentage score (raw sum * 4)
+        const who5Raw = {};
+        WHO5_ITEMS.forEach((item) => (who5Raw[item.id] = Number(val(item.id))));
+        const who5Sum = Object.values(who5Raw).reduce((a, b) => a + b, 0);
+        const who5Percent = who5Sum * 4;
+
+        const payload = {
+          calibration,
+          iuipc: { raw: iuipc, subscales: iuipcSubscales },
+          westin: { raw: westinRaw, category: westinCategory, privacyOrientedCount },
+          who5: { raw: who5Raw, sum: who5Sum, percent: who5Percent },
+        };
+
+        window.sendToBackend("survey_response", payload);
+        window.location.href = "debrief.html";
+      });
+    });
+  </script>
+</body>
+</html>

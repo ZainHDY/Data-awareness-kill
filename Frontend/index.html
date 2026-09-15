@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Research Study</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page" style="position: relative;">
+    <div class="lang-toggle">
+      <button id="lang-en" onclick="setLang('en')">EN</button>
+      <button id="lang-ar" onclick="setLang('ar')">AR</button>
+    </div>
+
+    <div class="brand" data-i18n="site_name">Academic Research Study</div>
+
+    <div class="notice">
+      <strong data-i18n="academic_notice_title">This is an academic research study</strong><br>
+      <span data-i18n="academic_notice_body">This site is part of a graduate research project...</span>
+    </div>
+
+    <div class="card">
+      <h1 data-i18n="consent_title">Before you continue</h1>
+      <p data-i18n="consent_body">By continuing, you agree to take part...</p>
+      <div class="btn-row">
+        <button class="btn-primary" id="agree-btn" data-i18n="consent_agree">I agree to take part</button>
+        <button class="btn-decline" id="decline-btn" data-i18n="consent_decline">I don't agree</button>
+      </div>
+      <p class="eligibility" data-i18n="eligibility_note">Participation is open to adults (18+) only.</p>
+    </div>
+  </div>
+
+  <script src="js/translations.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("lang-en").classList.toggle("active", getLang() === "en");
+      document.getElementById("lang-ar").classList.toggle("active", getLang() === "ar");
+    });
+
+    document.getElementById("agree-btn").addEventListener("click", () => {
+      localStorage.setItem("consent_participation", "yes");
+      localStorage.setItem("consent_at", new Date().toISOString());
+      sendToBackend("consent_decision", { decision: "yes" });
+      window.location.href = "profile.html";
+    });
+
+    document.getElementById("decline-btn").addEventListener("click", () => {
+      localStorage.setItem("consent_participation", "no");
+      window.location.href = "blocked.html";
+    });
+  </script>
+</body>
+</html>

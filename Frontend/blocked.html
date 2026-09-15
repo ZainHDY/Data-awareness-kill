@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Research Study</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="brand" data-i18n="site_name">Academic Research Study</div>
+    <div class="card">
+      <h1 id="blocked-title" data-i18n="blocked_title">You can't continue without consent</h1>
+      <p id="blocked-body" data-i18n="blocked_body">Participation in this study requires...</p>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="window.location.href='index.html'" data-i18n="back_home">Back to home</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/translations.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const reason = new URLSearchParams(window.location.search).get("reason");
+      const dict = STRINGS[getLang()] || STRINGS.en;
+      if (reason === "age") {
+        document.getElementById("blocked-title").textContent = dict.ineligible_title;
+        document.getElementById("blocked-title").removeAttribute("data-i18n");
+        document.getElementById("blocked-body").textContent = dict.ineligible_body;
+        document.getElementById("blocked-body").removeAttribute("data-i18n");
+      }
+    });
+  </script>
+</body>
+</html>

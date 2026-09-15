@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Research Study</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page" style="position: relative;">
+    <div class="lang-toggle">
+      <button id="lang-en" onclick="setLang('en')">EN</button>
+      <button id="lang-ar" onclick="setLang('ar')">AR</button>
+    </div>
+    <div class="brand" data-i18n="site_name">Academic Research Study</div>
+
+    <form class="card" id="info-form">
+      <h1 data-i18n="optional_info_title">Want updates on this research? (optional)</h1>
+      <p data-i18n="optional_info_body">Leave your name and email if you'd like a summary...</p>
+
+      <fieldset>
+        <legend data-i18n="name_label">Name</legend>
+        <input type="text" id="name-input" name="name">
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="email_label">Email</legend>
+        <input type="email" id="email-input" name="email">
+      </fieldset>
+
+      <div class="btn-row">
+        <button type="submit" class="btn-primary" data-i18n="submit">Continue</button>
+        <button type="button" class="btn-text" id="skip-btn" data-i18n="skip">Skip</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="js/translations.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/cookie-banner.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (localStorage.getItem("consent_participation") !== "yes") {
+        window.location.href = "index.html";
+        return;
+      }
+      document.getElementById("lang-en").classList.toggle("active", getLang() === "en");
+      document.getElementById("lang-ar").classList.toggle("active", getLang() === "ar");
+    });
+
+    function goToFeed(name, email) {
+      const info = { name: name || null, email: email || null };
+      localStorage.setItem("volunteered_info", JSON.stringify(info));
+      sendToBackend("volunteered_info", info);
+      window.location.href = "feed.html";
+    }
+
+    document.getElementById("info-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      goToFeed(e.target.name.value.trim(), e.target.email.value.trim());
+    });
+
+    document.getElementById("skip-btn").addEventListener("click", () => {
+      goToFeed(null, null);
+    });
+  </script>
+</body>
+</html>

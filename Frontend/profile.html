@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Research Study</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page" style="position: relative;">
+    <div class="lang-toggle">
+      <button id="lang-en" onclick="setLang('en')">EN</button>
+      <button id="lang-ar" onclick="setLang('ar')">AR</button>
+    </div>
+    <div class="brand" data-i18n="site_name">Academic Research Study</div>
+
+    <form class="card" id="profile-form">
+      <h1 data-i18n="profile_title">A little about you</h1>
+      <p data-i18n="profile_subtitle">This helps us understand our participants as a group.</p>
+
+      <fieldset>
+        <legend data-i18n="interests_label">Which of these are you interested in?</legend>
+        <div class="checkbox-grid">
+          <label><input type="checkbox" name="interests" value="fashion"><span data-i18n="interest_fashion">Fashion</span></label>
+          <label><input type="checkbox" name="interests" value="food"><span data-i18n="interest_food">Food</span></label>
+          <label><input type="checkbox" name="interests" value="memes"><span data-i18n="interest_memes">Memes</span></label>
+          <label><input type="checkbox" name="interests" value="politics"><span data-i18n="interest_politics">Politics</span></label>
+          <label><input type="checkbox" name="interests" value="news"><span data-i18n="interest_news">News</span></label>
+          <label><input type="checkbox" name="interests" value="sports"><span data-i18n="interest_sports">Sports</span></label>
+          <label><input type="checkbox" name="interests" value="tech"><span data-i18n="interest_tech">Tech</span></label>
+          <label><input type="checkbox" name="interests" value="gaming"><span data-i18n="interest_gaming">Gaming</span></label>
+        </div>
+        <p class="error-text" id="interests-error" data-i18n="required_note"></p>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="location_label">Where are you located?</legend>
+        <input type="text" id="location-input" name="location" data-i18n-placeholder="location_placeholder" placeholder="e.g. Damascus, Syria">
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="age_label">Age</legend>
+        <select id="age-select" name="age">
+          <option value="" data-i18n="age_label">Age</option>
+          <option value="under18" data-i18n="age_under18">Under 18</option>
+          <option value="18-24" data-i18n="age_18_24">18–24</option>
+          <option value="25-34" data-i18n="age_25_34">25–34</option>
+          <option value="35-44" data-i18n="age_35_44">35–44</option>
+          <option value="45-54" data-i18n="age_45_54">45–54</option>
+          <option value="55plus" data-i18n="age_55plus">55+</option>
+        </select>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="gender_label">Gender (optional)</legend>
+        <div class="radio-list">
+          <label><input type="radio" name="gender" value="woman"><span data-i18n="gender_woman">Woman</span></label>
+          <label><input type="radio" name="gender" value="man"><span data-i18n="gender_man">Man</span></label>
+          <label><input type="radio" name="gender" value="nonbinary"><span data-i18n="gender_nonbinary">Non-binary</span></label>
+          <label><input type="radio" name="gender" value="self_describe"><span data-i18n="gender_self_describe">Self-describe</span></label>
+          <label><input type="radio" name="gender" value="prefer_not"><span data-i18n="gender_prefer_not">Prefer not to say</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="baseline_title">Before you continue, a few quick questions</legend>
+
+        <p style="font-size:14px; margin-bottom:6px;" data-i18n="baseline_q1"></p>
+        <div class="scale-row">
+          <span class="scale-label" data-i18n="scale_1">Not at all</span>
+          <div class="scale-options">
+            <label><input type="radio" name="baseline_q1" value="1">1</label>
+            <label><input type="radio" name="baseline_q1" value="2">2</label>
+            <label><input type="radio" name="baseline_q1" value="3">3</label>
+            <label><input type="radio" name="baseline_q1" value="4">4</label>
+            <label><input type="radio" name="baseline_q1" value="5">5</label>
+          </div>
+          <span class="scale-label" data-i18n="scale_5">Extremely</span>
+        </div>
+
+        <p style="font-size:14px; margin:18px 0 6px;" data-i18n="baseline_q2"></p>
+        <div class="scale-row">
+          <span class="scale-label" data-i18n="scale_1">Not at all</span>
+          <div class="scale-options">
+            <label><input type="radio" name="baseline_q2" value="1">1</label>
+            <label><input type="radio" name="baseline_q2" value="2">2</label>
+            <label><input type="radio" name="baseline_q2" value="3">3</label>
+            <label><input type="radio" name="baseline_q2" value="4">4</label>
+            <label><input type="radio" name="baseline_q2" value="5">5</label>
+          </div>
+          <span class="scale-label" data-i18n="scale_5">Extremely</span>
+        </div>
+
+        <p style="font-size:14px; margin:18px 0 6px;" data-i18n="baseline_q3"></p>
+        <div class="scale-row">
+          <span class="scale-label" data-i18n="scale_1">Not at all</span>
+          <div class="scale-options">
+            <label><input type="radio" name="baseline_q3" value="1">1</label>
+            <label><input type="radio" name="baseline_q3" value="2">2</label>
+            <label><input type="radio" name="baseline_q3" value="3">3</label>
+            <label><input type="radio" name="baseline_q3" value="4">4</label>
+            <label><input type="radio" name="baseline_q3" value="5">5</label>
+          </div>
+          <span class="scale-label" data-i18n="scale_5">Extremely</span>
+        </div>
+      </fieldset>
+
+      <p class="error-text" id="form-error" data-i18n="required_note"></p>
+
+      <div class="btn-row">
+        <button type="submit" class="btn-primary" data-i18n="continue_btn">Continue</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="js/translations.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/cookie-banner.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Guard: must have consented on the landing page first.
+      if (localStorage.getItem("consent_participation") !== "yes") {
+        window.location.href = "index.html";
+        return;
+      }
+      document.getElementById("lang-en").classList.toggle("active", getLang() === "en");
+      document.getElementById("lang-ar").classList.toggle("active", getLang() === "ar");
+    });
+
+    document.getElementById("age-select").addEventListener("change", (e) => {
+      if (e.target.value === "under18") {
+        window.location.href = "blocked.html?reason=age";
+      }
+    });
+
+    document.getElementById("profile-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const interests = [...form.querySelectorAll('input[name="interests"]:checked')].map(el => el.value);
+      const age = form.age.value;
+      const q1 = form.baseline_q1.value;
+      const q2 = form.baseline_q2.value;
+      const q3 = form.baseline_q3.value;
+
+      let hasError = false;
+      document.getElementById("interests-error").classList.remove("visible");
+      document.getElementById("form-error").classList.remove("visible");
+
+      if (interests.length === 0) {
+        document.getElementById("interests-error").classList.add("visible");
+        hasError = true;
+      }
+      if (!age || !q1 || !q2 || !q3) {
+        document.getElementById("form-error").classList.add("visible");
+        hasError = true;
+      }
+      if (hasError) return;
+
+      const profile = {
+        interests,
+        location: form.location.value.trim(),
+        age,
+        gender: form.gender.value || null,
+        baseline: { q1, q2, q3 },
+      };
+      localStorage.setItem("participant_profile", JSON.stringify(profile));
+      sendToBackend("profile", profile);
+      window.location.href = "optional-info.html";
+    });
+  </script>
+</body>
+</html>

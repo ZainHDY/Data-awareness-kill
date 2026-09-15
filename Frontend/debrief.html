@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Research Study</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .debrief-section {
+      width: 100%;
+      max-width: var(--max-w);
+      margin-bottom: 20px;
+    }
+    .debrief-section ul {
+      margin: 0 0 16px;
+      padding-inline-start: 20px;
+      color: var(--ink-soft);
+      font-size: 14px;
+    }
+    .debrief-section li { margin-bottom: 8px; }
+    #delete-status {
+      margin-top: 14px;
+      font-size: 14px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      display: none;
+    }
+    #delete-status.ok {
+      display: block;
+      background: var(--accent-soft);
+      color: var(--accent-hover);
+      border: 1px solid var(--accent);
+    }
+    #delete-status.pending {
+      display: block;
+      background: var(--paper);
+      color: var(--ink-soft);
+      border: 1px solid var(--line);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="brand" data-i18n="site_name">Academic Research Study</div>
+
+    <div class="debrief-section card">
+      <h1>Thank you — here's the full picture</h1>
+      <p>This study wasn't really about "browsing a social feed." It was studying <strong>whether people notice and understand data collection that isn't clearly disclosed up front</strong> — especially in places where data-protection rules are still developing.</p>
+      <p>To measure that honestly, parts of what was actually happening had to stay unstated until now. That's a recognized research method called a <em>deception design</em>, and it's why you saw the report on the previous page before this explanation.</p>
+    </div>
+
+    <div class="debrief-section card">
+      <h2>What wasn't disclosed upfront, and why</h2>
+      <ul>
+        <li><strong>The cookie choice mismatch:</strong> clicking "Reject all" didn't necessarily block the analytics cookie. This tests whether people notice when a stated choice isn't actually honored — a real pattern seen on production websites.</li>
+        <li><strong>Passive fingerprinting and behavioral tracking:</strong> device details, scroll depth, per-post dwell time, and comment-field interactions were all recorded in the background during the "feed" step, without a banner calling each one out individually.</li>
+        <li><strong>The ad-targeting demo:</strong> the simplified ad example showed how easily browsing behavior maps to targeting — this is illustrative, not a real ad network, and nothing was actually sold or shared.</li>
+      </ul>
+      <p>Nothing collected here was sold, shared with third parties, or used for anything beyond this research.</p>
+    </div>
+
+    <div class="debrief-section card">
+      <h2>Protecting yourself going forward</h2>
+      <ul>
+        <li>Browser cookie/tracking settings and extensions that block third-party trackers reduce (but don't eliminate) this kind of tracking.</li>
+        <li>Fingerprinting resistant browser modes exist in some browsers and can make sessions harder to link together.</li>
+        <li>Reading a site's cookie banner carefully and checking whether "reject" is actually respected is a habit worth having — as you just saw, it isn't always honored.</li>
+      </ul>
+    </div>
+
+    <div class="debrief-section card">
+      <h2>Your data, your choice</h2>
+      <p>Everything recorded during this session — your profile answers, any name/email you gave, and all the background data shown on the report page — can be deleted right now. This clears it from this browser and asks the study server to remove its copy.</p>
+      <button class="btn-decline" id="delete-btn">Delete my data</button>
+      <div id="delete-status"></div>
+    </div>
+
+    <div class="debrief-section card">
+      <h2>Questions or concerns?</h2>
+      <p>If you have questions about this study or how your data was handled, contact the research team at <strong>[researcher email]</strong> or the institution's ethics board at <strong>[IRB contact]</strong>.</p>
+    </div>
+  </div>
+
+  <script src="js/translations.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (localStorage.getItem("consent_participation") !== "yes") {
+        window.location.href = "index.html";
+        return;
+      }
+      applyI18n();
+
+      document.getElementById("delete-btn").addEventListener("click", async () => {
+        const btn = document.getElementById("delete-btn");
+        const status = document.getElementById("delete-status");
+        btn.disabled = true;
+        status.className = "pending";
+        status.textContent = "Deleting…";
+
+        const result = await window.requestDataDeletion();
+
+        status.className = "ok";
+        if (!result.backendContacted) {
+          status.textContent = "Done — all data cleared from this browser. (No live backend yet, so there was nothing stored server-side to contact.)";
+        } else if (result.backendOk) {
+          status.textContent = "Done — data cleared from this browser and deletion confirmed by the server.";
+        } else {
+          status.textContent = "Data cleared from this browser. The server couldn't be reached to confirm server-side deletion — contact the research team if you'd like this followed up on directly.";
+        }
+        btn.textContent = "Deleted";
+      });
+    });
+  </script>
+</body>
+</html>
